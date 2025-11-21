@@ -34,3 +34,66 @@ curl -X POST http://localhost:8080/fiadopay/gateway/payments   -H "Authorization
 ```bash
 curl http://localhost:8080/fiadopay/gateway/payments/<paymentId>
 ```
+------------------------------------------------------------------------------------------
+# Fiado-Pay-API - Refatoração 
+
+A **Fiado-Pay-API** é o resultado da refatoração profunda da API original (`https://github.com/pooadoc/fiadopay.git`).
+
+O objetivo central desta refatoração foi transformar a estrutura inicial, que apresentava alto acoplamento e baixa manutenibilidade, em uma API **robusta, escalável e com código limpo**, baseada em princípios de arquitetura moderna e aplicação de padrões de projeto.
+
+---
+
+### Contexto Escolhido
+
+* **Domínio Principal:** Gestão de Dívidas e Transações (Criação, Pagamento, Consultas, Lançamento de Juros).
+* **Versão Refatorada:** Adoção de **Arquitetura Limpa (Clean Architecture)** para isolar o domínio, garantir a testabilidade e facilitar a manutenção, focando em **desacoplamento e coesão**.
+
+### Decisões de Design
+
+As principais decisões de design visaram desacoplar a aplicação e preparar o sistema para o crescimento:
+
+* **Arquitetura Orientada ao Domínio (DDD):** Modelagem rigorosa das **Entidades** e **Value Objects** de negócio (e.g., Cliente, Dívida), garantindo que as regras de negócio residam na camada de Domínio.
+* **Separação de Camadas (Ports and Adapters):** O código é dividido em Camadas (Domínio, Aplicação, Infraestrutura) onde as interfaces (Portas) são implementadas por classes de infraestrutura (Adaptadores), isolando o **Domínio** da tecnologia.
+* **Injeção de Dependência (IoC/DI):** Utilização de um contêiner para gerenciar o ciclo de vida dos componentes, promovendo o acoplamento fraco.
+
+### Anotações Criadas e seus Metadados
+
+Foram criadas anotações customizadas para aplicar lógica de forma declarativa e não invasiva (Programação Orientada a Aspectos - AOP).
+
+| Anotação Customizada | Uso/Contexto | Metadados Principais (Exemplo) |
+| :--- | :--- | :--- |
+| **`@<Nome da Anotação 1>`** | `<Ex: Validação de limites de crédito.>` | `limiteValor` (double), `diasBloqueio` (int) |
+| **`@Auditoria`** | Usada em métodos de serviço para registrar o autor e o *timestamp* de uma alteração. | `tipoOperacao` (enum: CREATE, UPDATE) |
+
+### Mecanismo de Reflexão
+
+O uso da **Reflexão** é a fundação do *bootstrapping* e do processamento das anotações customizadas.
+
+* **Inversão de Controle (IoC):** A Reflexão é usada para escanear pacotes em busca de classes anotadas (e.g., `@Service`) e instanciar as dependências automaticamente, construindo o **grafo de objetos**.
+* **Processamento AOP:** É utilizada para ler os **Metadados** das anotações customizadas em tempo de execução, permitindo que a lógica de aspectos (como auditoria ou validação) seja aplicada antes ou depois do método original via *Proxies*.
+
+### Threads
+
+A gestão de **Threads** é crucial para a responsividade e escalabilidade da API:
+
+* **Pool de Threads HTTP:** O servidor web (e.g., Tomcat/Kestrel) gerencia um pool de threads para atender múltiplas requisições simultaneamente.
+* **Tarefas Assíncronas:** Utilização de um **ExecutorService** (ou análogos de framework) para delegar tarefas que não exigem resposta imediata.
+    * **Exemplo:** O envio de e-mails de notificação ou a geração de relatórios complexos são despachados para uma thread separada, liberando a thread principal da requisição mais rapidamente.
+
+### Padrões Aplicados
+
+Diversos **Padrões de Projeto (Design Patterns)** foram aplicados na refatoração:
+
+| Padrão | Tipo | Camada | Objetivo |
+| :--- | :--- | :--- | :--- |
+| **Repository** | Estrutural | Infraestrutura | Abstrair a lógica de persistência de dados do restante da aplicação. |
+| **Strategy** | Comportamental | Domínio/Aplicação | Definir uma família de algoritmos (e.g., diferentes métodos de cálculo de juros) e torná-los intercambiáveis. |
+| **Factory Method** | Criacional | Infraestrutura | Criar instâncias de objetos complexos (e.g., *parsers* de pagamento) sem expor a lógica de criação. |
+
+### Limites Conhecidos
+
+Embora a refatoração tenha elevado a qualidade do código, alguns limites conhecidos permanecem:
+
+* **Escalabilidade de Persistência:** O banco de dados atual pode se tornar um gargalo sob extrema carga. Seria necessário implementar *sharding* ou migrar para soluções distribuídas para lidar com milhões de transações.
+* **Segurança Avançada:** A implementação de recursos de segurança mais avançados, como **Rate Limiting** e **Circuit Breaker**, está pendente em *endpoints* críticos.
+
