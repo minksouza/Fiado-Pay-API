@@ -30,7 +30,7 @@ curl -X POST http://localhost:8080/fiadopay/auth/token   -H "Content-Type: appli
 
 curl -X POST http://localhost:8080/fiadopay/auth/token \
   -H "Content-Type: application/json" \
-  -d '{"client_id":"9c67fa63-bda7-42ef-b9a5-14cc05b1383a","client_secret":"3dde7070d36c451285e6ea3cbd5520fb"}'
+  -d '{"client_id":"0a77f78a-a905-48ef-842f-e5cc50a7276e","client_secret":"1673eba729a74ce0b916e1fae83cd16c"}'
 
 RESULTADO
 {"access_token":"FAKE-1","token_type":"Bearer","expires_in":3600}
@@ -39,7 +39,7 @@ RESULTADO
 
 3) **Criar pagamento** OKAY
 ```bash
-curl -X POST http://localhost:8080/fiadopay/gateway/payments   -H "Authorization: Bearer FAKE-<merchantId>"   -H "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000"   -H "Content-Type: application/json"   -d '{"method":"CARD","currency":"BRL","amount":250.50,"installments":12,"metadataOrderId":"ORD-123"}'
+curl -X POST http://localhost:8080/fiadopay/gateway/payments   -H "Authorization: Bearer FAKE-2"   -H "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000"   -H "Content-Type: application/json"   -d '{"method":"CARD","currency":"BRL","amount":250.50,"installments":12,"metadataOrderId":"ORD-123"}'
 
 RESULTADO
 {"id":"pay_9723d1df-8de7-4443-869d-b9ee36d10c86","status":"PENDING","method":"CARD","amount":250.50,"installments":12,"interestRate":0.0,"total":250.50}
@@ -48,8 +48,7 @@ RESULTADO
 
 4) **Consultar pagamento** OKAY
 ```bash
-curl http://localhost:8080/fiadopay/gateway/payments/<paymentId>
-
+curl http://localhost:8080/fiadopay/gateway/payments/pay_c38a2c12-bbe0-4df8-9981-626ca613975e
 RESULTADO
 {"id":"pay_9723d1df-8de7-4443-869d-b9ee36d10c86","status":"APPROVED","method":"CARD","amount":250.50,"installments":12,"interestRate":1.0,"total":280.56}
 
