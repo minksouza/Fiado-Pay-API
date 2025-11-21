@@ -1,6 +1,7 @@
 package edu.ucsal.fiadopay.payment;
 
 import org.springframework.stereotype.Component;
+
 import edu.ucsal.fiadopay.annotations.PaymentMethod;
 import edu.ucsal.fiadopay.domain.Payment;
 
